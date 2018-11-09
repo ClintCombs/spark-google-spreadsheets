@@ -27,13 +27,13 @@ sparkComponents := Seq("sql")
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.5" % "provided",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-  ("com.google.api-client" % "google-api-client" % "1.22.0").
-    exclude("com.google.guava", "guava-jdk5"),
+//  ("com.google.api-client" % "google-api-client" % "1.22.0").
+//    exclude("com.google.guava", "guava-jdk5"),
+  "com.google.api-client" % "google-api-client" % "1.22.0",
   "com.google.oauth-client" % "google-oauth-client-jetty" % "1.22.0",
-  "com.google.apis" % "google-api-services-sheets" % "v4-rev18-1.22.0"
-)
-
-libraryDependencies ++= Seq(
+  "com.google.apis" % "google-api-services-sheets" % "v4-rev18-1.22.0",
+// )
+// libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % testSparkVersion.value % "test" force(),
   "org.apache.spark" %% "spark-sql" % testSparkVersion.value % "test"  force(),
   "org.scala-lang" % "scala-library" % scalaVersion.value % "compile",
