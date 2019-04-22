@@ -230,7 +230,7 @@ object SparkSpreadsheetService {
         Seq()
       }
       else {
-        values.tail.map { row => headers.zip(row.map(_.toString)).toMap }
+        values.tail.map { row => headers.zipAll(row.map(_.toString), "", "").toMap }
       }
   }
 
