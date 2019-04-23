@@ -229,6 +229,21 @@ class SpreadsheetSuite extends FlatSpec with BeforeAndAfter {
     }
   }
 
+  // TODO: test leading empty values as well
+
+  it should "handle empty trailing values in the first non-header row" in {
+    sqlContext.sql(
+      s"""
+         |CREATE TEMPORARY TABLE SpreadsheetSuite
+         |USING com.github.potix2.spark.google.spreadsheets
+         |OPTIONS (path "$TEST_SPREADSHEET_ID/case3", serviceAccountId "$serviceAccountId", credentialPath "$testCredentialPath")
+       """.stripMargin.replaceAll("\n", " "))
+
+    val df = sqlContext.sql("SELECT name, email FROM SpreadsheetSuite")
+    assert(df.collect().size == 3)
+    assert(df.schema.fields.size == 2)
+  }
+
   trait UnderscoreDataFrame {
     val aSchema = StructType(List(
       StructField("foo_bar", IntegerType, true)))
