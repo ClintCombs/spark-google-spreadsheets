@@ -31,16 +31,18 @@ case class SpreadsheetRelation protected[spark] (
 
   override def schema: StructType = userSchema.getOrElse(inferSchema())
 
-  private lazy val rows: Seq[Map[String, String]] =
+  private lazy val aWorksheet: SparkWorksheet =
     findWorksheet(spreadsheetName, worksheetName)(context) match {
-      case Right(aWorksheet) => aWorksheet.rows
+      case Right(aWorksheet) => aWorksheet
       case Left(e) => throw e
     }
 
+  private lazy val rows: Seq[Map[String, String]] = aWorksheet.rows
+
   private[spreadsheets] def findWorksheet(spreadsheetName: String, worksheetName: String)(implicit ctx: SparkSpreadsheetContext): Either[Throwable, SparkWorksheet] =
     for {
-      sheet <- findSpreadsheet(spreadsheetName).toRight(new RuntimeException(s"no such a worksheet: $worksheetName")).right
-      worksheet <- sheet.findWorksheet(worksheetName).toRight(new RuntimeException(s"no such a spreadsheet: $spreadsheetName")).right
+      sheet <- findSpreadsheet(spreadsheetName).toRight(new RuntimeException(s"no such spreadsheet: $spreadsheetName")).right
+      worksheet <- sheet.findWorksheet(worksheetName).toRight(new RuntimeException(s"no such worksheet: $worksheetName")).right
     } yield worksheet
 
   override def buildScan(): RDD[Row] = {
@@ -77,7 +79,7 @@ case class SpreadsheetRelation protected[spark] (
   }
 
   private def inferSchema(): StructType =
-    StructType(rows(0).keys.toList.map { fieldName =>
+    StructType(aWorksheet.headers.toList.map { fieldName =>
       StructField(fieldName, StringType, nullable = true)
     })
 

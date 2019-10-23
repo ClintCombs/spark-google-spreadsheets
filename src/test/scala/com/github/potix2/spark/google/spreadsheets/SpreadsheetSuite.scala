@@ -45,7 +45,7 @@ class SpreadsheetSuite extends FlatSpec with BeforeAndAfter {
   }
 
   def withNewEmptyWorksheet(testCode:(String) => Any): Unit = {
-    implicit val spreadSheetContext = SparkSpreadsheetService(serviceAccountId, new File(testCredentialPath))
+    implicit val spreadSheetContext = SparkSpreadsheetService(Some(serviceAccountId), new File(testCredentialPath))
     val spreadsheet = SparkSpreadsheetService.findSpreadsheet(TEST_SPREADSHEET_ID)
     spreadsheet.foreach { s =>
       val workSheetName = Random.alphanumeric.take(16).mkString
@@ -60,7 +60,7 @@ class SpreadsheetSuite extends FlatSpec with BeforeAndAfter {
   }
 
   def withEmptyWorksheet(testCode:(String) => Any): Unit = {
-    implicit val spreadSheetContext = SparkSpreadsheetService(serviceAccountId, new File(testCredentialPath))
+    implicit val spreadSheetContext = SparkSpreadsheetService(Some(serviceAccountId), new File(testCredentialPath))
     val workSheetName = Random.alphanumeric.take(16).mkString
     try {
       testCode(workSheetName)
@@ -134,7 +134,9 @@ class SpreadsheetSuite extends FlatSpec with BeforeAndAfter {
     val personsDF = sqlContext.createDataFrame(personsRDD, personsSchema)
   }
 
-  "A DataFrame" should "be saved as a sheet" in new PersonDataFrame {
+  behavior of "A DataFrame"
+
+  it should "be saved as a sheet" in new PersonDataFrame {
     import com.github.potix2.spark.google.spreadsheets._
     withEmptyWorksheet { workSheetName =>
       personsDF.write
@@ -153,6 +155,17 @@ class SpreadsheetSuite extends FlatSpec with BeforeAndAfter {
       assert(result(0).getString(1) == "Kathleen")
       assert(result(0).getString(2) == "Cole")
     }
+  }
+
+  it should "infer it's schema from headers" in {
+    val results = sqlContext.read
+      .option("serviceAccountId", serviceAccountId)
+      .option("credentialPath", testCredentialPath)
+      .spreadsheet(s"$TEST_SPREADSHEET_ID/case3")
+
+    assert(results.columns.size === 2)
+    assert(results.columns.contains("a"))
+    assert(results.columns.contains("b"))
   }
 
   "A sparse DataFrame" should "be saved as a sheet, preserving empty cells" in new SparsePersonDataFrame {
